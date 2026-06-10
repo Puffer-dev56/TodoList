@@ -26,6 +26,7 @@ function inputTask(event) {
             Status: false,
             Priority: inpPriority,
             From: inpFrom,
+            Deadline: inpDeadline,
         });
         event.target.inpTask.value = "";
         SaveTask();
@@ -65,12 +66,20 @@ function Search() {
     let searchTarget = String(search.value).trim().toLowerCase();
     let tasks = filterEvent(filterMode);
     if (searchTarget.length === 0) {
-        RenderTask(tasks);
+        if(priorityFilter.checked){
+            RenderTask([...tasks].sort((a,b)=> Number(a.Priority)-Number(b.Priority)));
+        }else{
+            RenderTask(tasks);
+        }
     } else {
         let temp = tasks.filter((task) => {
             return String(task.Name).toLowerCase().includes(searchTarget.toLocaleLowerCase());
         });
-        RenderTask(temp);
+        if(priorityFilter.checked){
+            RenderTask([...temp].sort((a,b)=> Number(a.Priority)-Number(b.Priority)));
+        }else{
+            RenderTask(temp);
+        }
     }
 }
 function CheckboxEvent(event, task) {
@@ -79,11 +88,41 @@ function CheckboxEvent(event, task) {
     RenderTaskCount();
     Search();
 }
+function DateText(task) {
+    let startTime = String(task.From).split("-");
+    let endTime = String(task.Deadline).split("-");
+    startTime = startTime[2] + "/" + startTime[1] + "/" + startTime[0];
+    endTime = endTime[2] + "/" + endTime[1] + "/" + endTime[0];
+    return startTime + " - " + endTime;
+}
+function PriorityText(task){
+    if(task.Priority === "1"){
+        return ["Height","bg-danger"];
+    }else if(task.Priority === "2"){
+        return ["Medium","bg-warning"];
+    }else{
+        return ["Low","bg-info"]
+    }
+}
 function RenderTask(Tasks) {
     taskFrame.replaceChildren();
     Tasks.forEach((task) => {
         const taskCard = document.createElement("div");
-        taskCard.classList.add("border", "rounded", "d-flex", "p-2", "justify-content-between", "align-items-center", "mb-3");
+        taskCard.classList.add("border", "rounded", "d-flex", "flex-column", "mb-3");
+
+        const header = document.createElement("div");
+        const body = document.createElement("div");
+        body.classList.add("d-flex", "p-2", "justify-content-between", "align-items-center");
+        header.classList.add("bg-light","rounded-top","d-flex","position-relative","align-items-center","justify-content-center","border-bottom","py-2");
+        taskCard.append(header, body);
+
+        const labDate = document.createElement("p")
+        const badge = document.createElement("span");
+        badge.classList.add("badge","position-absolute","start-0","ms-2",PriorityText(task)[1]);
+        badge.textContent = PriorityText(task)[0];
+        labDate.textContent = DateText(task);
+        labDate.classList.add("m-0");
+        header.append(badge,labDate);
 
         const taskForm = document.createElement("form");
         const Checkbox = document.createElement("input");
@@ -98,7 +137,7 @@ function RenderTask(Tasks) {
 
         const btnContainer = document.createElement("div");
         btnContainer.classList.add("d-flex", "gap-2");
-        taskCard.append(taskForm, btnContainer);
+        body.append(taskForm, btnContainer);
 
         const btnClose = document.createElement("button");
         const btnEdit = document.createElement("button");
@@ -130,11 +169,11 @@ function RemoveTask(target) {
     RenderTaskCount();
     Search();
 }
-function setInpStarttime(){
+function setInpStarttime() {
     let objDate = new Date();
     let year = objDate.getFullYear();
-    let month = String(objDate.getMonth()+1).padStart(2,"0");
-    let date = String(objDate.getDate()).padStart(2,"0");
+    let month = String(objDate.getMonth() + 1).padStart(2, "0");
+    let date = String(objDate.getDate()).padStart(2, "0");
     inpStarttime.value = year + "-" + month + "-" + date;
 }
 function main() {
@@ -156,12 +195,7 @@ function main() {
         }
         Search();
     });
-    priorityFilter.addEventListener("change", () => {
-        if (priorityFilter.checked) {
-            filterMode = "priority"
-        } else {
-            filterMode = "all"
-        }
+    priorityFilter.addEventListener("change",()=>{
         Search();
     });
     ReadTask();
