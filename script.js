@@ -7,12 +7,16 @@ const labAll = document.querySelector("#labAll");
 const actFilter = document.querySelector("#Active");
 const completeFilter = document.querySelector("#Complete");
 const priorityFilter = document.querySelector("#Priority");
+const inpStarttime = document.querySelector("#from");
 let filterMode = "all";
-let taskList = []
+let taskList = [];
 
 function inputTask(event) {
     event.preventDefault();
     let info = String(event.target.inpTask.value).trim();
+    let inpPriority = String(event.target.PrioritySelector.value);
+    let inpFrom = String(event.target.from.value);
+    let inpDeadline = String(event.target.deadline.value);
     if (info.length === 0) {
         return;
     } else {
@@ -20,12 +24,15 @@ function inputTask(event) {
             id: Date.now(),
             Name: info,
             Status: false,
+            Priority: inpPriority,
+            From: inpFrom,
         });
+        event.target.inpTask.value = "";
         SaveTask();
         RenderTaskCount();
         Search();
+        setInpStarttime();
     }
-    event.target.inpTask.value = "";
 }
 function filterEvent(filterMode) {
     if (filterMode === "active") {
@@ -89,13 +96,31 @@ function RenderTask(Tasks) {
         labTask.classList.add("form-check-label", "ms-1");
         taskForm.append(Checkbox, labTask);
 
+        const btnContainer = document.createElement("div");
+        btnContainer.classList.add("d-flex", "gap-2");
+        taskCard.append(taskForm, btnContainer);
+
         const btnClose = document.createElement("button");
-        btnClose.classList.add("btn","btn-danger", "material-symbols-outlined");
+        const btnEdit = document.createElement("button");
+        btnClose.classList.add("btn", "btn-danger", "material-symbols-outlined");
         btnClose.textContent = "delete";
-        btnClose.addEventListener("click", () => { RemoveTask(task) });
-        taskCard.append(taskForm, btnClose);
+        btnEdit.classList.add("btn", "btn-outline-secondary", "material-symbols-outlined");
+        btnEdit.textContent = "edit";
+        btnClose.addEventListener("click", () => { DeleteModal(task); });
+        btnContainer.append(btnEdit, btnClose);
         taskFrame.append(taskCard);
     });
+}
+function DeleteModal(target) {
+    const delModal = new bootstrap.Modal("#delModal");
+    const btnDelete = document.querySelector("#delete");
+    const btnCancel = document.querySelector("#cancel");
+    btnDelete.addEventListener("click", () => {
+        RemoveTask(target);
+        delModal.hide();
+    });
+    btnCancel.addEventListener("click", () => { delModal.hide(); });
+    delModal.show();
 }
 function RemoveTask(target) {
     taskList = taskList.filter((task) => {
@@ -104,6 +129,13 @@ function RemoveTask(target) {
     SaveTask();
     RenderTaskCount();
     Search();
+}
+function setInpStarttime(){
+    let objDate = new Date();
+    let year = objDate.getFullYear();
+    let month = String(objDate.getMonth()+1).padStart(2,"0");
+    let date = String(objDate.getDate()).padStart(2,"0");
+    inpStarttime.value = year + "-" + month + "-" + date;
 }
 function main() {
     addForm.addEventListener("submit", inputTask);
@@ -135,5 +167,6 @@ function main() {
     ReadTask();
     Search();
     RenderTaskCount();
+    setInpStarttime();
 }
 main();

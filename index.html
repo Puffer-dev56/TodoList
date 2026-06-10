@@ -53,11 +53,11 @@
                     <div class="row mb-3">
                         <div class="col-6">
                             <label class="form-label">From:</label>
-                            <input type="date" class="form-control">
+                            <input type="date" class="form-control" id="from">
                         </div>
                         <div class="col-6">
                             <label class="form-label">To:</label>
-                            <input type="date" class="form-control">
+                            <input type="date" class="form-control" id="deadline">
                         </div>
                     </div>
                     <button type="submit"
@@ -65,7 +65,7 @@
                 </form>
 
                 <!-- Filter -->
-                <div class="card mx-1 mt-3 mt-sm-2">
+                <div class="card mx-1 mt-3">
                     <div class="card-header text-center fw-bold">Filter</div>
                     <form class="card-body d-flex justify-content-around">
                         <div>
@@ -86,19 +86,38 @@
             </div>
 
             <!-- task render -->
-            <div class="container col-12 col-md-7 col-lg-8 col-xl-9">
+            <div class="col-12 col-md-7 col-lg-8 col-xl-9">
 
                 <!-- Search bar -->
-                <div class="d-flex justify-content-center align-items-center mx-1 mt-3 mt-sm-1 me-sm-3 mx-sm-0">
+                <div class="d-flex justify-content-center align-items-center mx-1 mt-3 mt-sm-1">
                     <form class="input-group" id="searchBar">
                         <span class="material-symbols-outlined text-secondary input-group-text" id="icon">search</span>
                         <input type="text" class="form-control" id="search" placeholder="Search...">
                     </form>
                 </div>
 
-                <div class="mt-3 mx-1 pe-sm-3 mx-sm-0" id="taskFrame">
+                <div class="mx-1 mt-3 mt-sm-4" id="taskFrame">
                     <!-- Output -->
 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- modal -->
+    <div class="modal fade" id="delModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">Delete task</h1>
+                    <button class="btn btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to Delete this task?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" id="cancel">Cancel</button>
+                    <button class="btn btn-danger" id="delete">Delete</button>
                 </div>
             </div>
         </div>
