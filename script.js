@@ -8,16 +8,27 @@ const actFilter = document.querySelector("#Active");
 const completeFilter = document.querySelector("#Complete");
 const priorityFilter = document.querySelector("#Priority");
 const inpStarttime = document.querySelector("#from");
-let filterMode = "all";
 let taskList = [];
-
 function inputTask(event) {
     event.preventDefault();
     let info = String(event.target.inpTask.value).trim();
     let inpPriority = String(event.target.PrioritySelector.value);
     let inpFrom = String(event.target.from.value);
     let inpDeadline = String(event.target.deadline.value);
+    let checkDate = new Date(inpDeadline) - new Date(inpFrom);
     if (info.length === 0) {
+        event.target.inpTask.focus();
+        return;
+    } else if (inpFrom.length === 0) {
+        event.target.from.focus();
+        return;
+    } else if (inpDeadline.length === 0) {
+        event.target.deadline.focus();
+        return;
+    } else if (checkDate < 0) {
+        setInpStarttime();
+        event.target.deadline.value = "";
+        event.target.from.focus();
         return;
     } else {
         taskList.push({
@@ -29,19 +40,22 @@ function inputTask(event) {
             Deadline: inpDeadline,
         });
         event.target.inpTask.value = "";
+        event.target.deadline.value = "";
         SaveTask();
         RenderTaskCount();
         Search();
         setInpStarttime();
     }
 }
-function filterEvent(filterMode) {
-    if (filterMode === "active") {
+function filterEvent() {
+    if (actFilter.checked) {
         completeFilter.checked = false;
         return taskList.filter(task => !task.Status);
-    } else if (filterMode === "complete") {
+    } else if (completeFilter.checked) {
         actFilter.checked = false;
         return taskList.filter(task => task.Status);
+    } else if (priorityFilter.checked) {
+        return [...taskList].sort((a, b) => Number(a.Priority) - Number(b.Priority));
     }
     return taskList;
 }
@@ -64,22 +78,14 @@ function RenderTaskCount() {
 }
 function Search() {
     let searchTarget = String(search.value).trim().toLowerCase();
-    let tasks = filterEvent(filterMode);
+    let tasks = filterEvent();
     if (searchTarget.length === 0) {
-        if(priorityFilter.checked){
-            RenderTask([...tasks].sort((a,b)=> Number(a.Priority)-Number(b.Priority)));
-        }else{
-            RenderTask(tasks);
-        }
+        RenderTask(tasks);
     } else {
         let temp = tasks.filter((task) => {
             return String(task.Name).toLowerCase().includes(searchTarget.toLocaleLowerCase());
         });
-        if(priorityFilter.checked){
-            RenderTask([...temp].sort((a,b)=> Number(a.Priority)-Number(b.Priority)));
-        }else{
-            RenderTask(temp);
-        }
+        RenderTask(temp);
     }
 }
 function CheckboxEvent(event, task) {
@@ -95,13 +101,20 @@ function DateText(task) {
     endTime = endTime[2] + "/" + endTime[1] + "/" + endTime[0];
     return startTime + " - " + endTime;
 }
-function PriorityText(task){
-    if(task.Priority === "1"){
-        return ["Height","bg-danger"];
-    }else if(task.Priority === "2"){
-        return ["Medium","bg-warning"];
-    }else{
-        return ["Low","bg-info"]
+function PriorityText(task) {
+    if (task.Priority === "1") {
+        return ["Heigh", "bg-danger"];
+    } else if (task.Priority === "2") {
+        return ["Medium", "bg-warning"];
+    } else {
+        return ["Low", "bg-info"]
+    }
+}
+function TasksChecked(taskCard, labDate, labTask, task) {
+    if (task.Status) {
+        taskCard.classList.add("opacity-75");
+        labTask.classList.add("text-decoration-line-through", "text-secondary");
+        labDate.classList.add("text-secondary");
     }
 }
 function RenderTask(Tasks) {
@@ -113,22 +126,22 @@ function RenderTask(Tasks) {
         const header = document.createElement("div");
         const body = document.createElement("div");
         body.classList.add("d-flex", "p-2", "justify-content-between", "align-items-center");
-        header.classList.add("bg-light","rounded-top","d-flex","position-relative","align-items-center","justify-content-center","border-bottom","py-2");
+        header.classList.add("bg-light", "rounded-top", "d-flex", "position-relative", "align-items-center", "justify-content-center", "border-bottom", "py-2");
         taskCard.append(header, body);
 
         const labDate = document.createElement("p")
         const badge = document.createElement("span");
-        badge.classList.add("badge","position-absolute","start-0","ms-2",PriorityText(task)[1]);
+        badge.classList.add("badge", "position-absolute", "start-0", "ms-2", PriorityText(task)[1]);
         badge.textContent = PriorityText(task)[0];
         labDate.textContent = DateText(task);
-        labDate.classList.add("m-0");
-        header.append(badge,labDate);
+        labDate.classList.add("m-0", "ms-4");
+        header.append(badge, labDate);
 
         const taskForm = document.createElement("form");
         const Checkbox = document.createElement("input");
+        Checkbox.addEventListener("change", (event) => { CheckboxEvent(event, task) });
         Checkbox.type = "checkbox";
         Checkbox.classList.add("form-check-input");
-        Checkbox.addEventListener("change", (event) => { CheckboxEvent(event, task) });
         Checkbox.checked = task.Status;
         const labTask = document.createElement("label");
         labTask.textContent = task.Name;
@@ -138,7 +151,6 @@ function RenderTask(Tasks) {
         const btnContainer = document.createElement("div");
         btnContainer.classList.add("d-flex", "gap-2");
         body.append(taskForm, btnContainer);
-
         const btnClose = document.createElement("button");
         const btnEdit = document.createElement("button");
         btnClose.classList.add("btn", "btn-danger", "material-symbols-outlined");
@@ -147,18 +159,19 @@ function RenderTask(Tasks) {
         btnEdit.textContent = "edit";
         btnClose.addEventListener("click", () => { DeleteModal(task); });
         btnContainer.append(btnEdit, btnClose);
-        taskFrame.append(taskCard);
+        TasksChecked(taskCard, labDate, labTask, task);
+        taskFrame.prepend(taskCard);
     });
 }
 function DeleteModal(target) {
     const delModal = new bootstrap.Modal("#delModal");
     const btnDelete = document.querySelector("#delete");
     const btnCancel = document.querySelector("#cancel");
-    btnDelete.addEventListener("click", () => {
+    btnDelete.onclick = () => {
         RemoveTask(target);
         delModal.hide();
-    });
-    btnCancel.addEventListener("click", () => { delModal.hide(); });
+    };
+    btnCancel.onclick = () => { delModal.hide(); };
     delModal.show();
 }
 function RemoveTask(target) {
@@ -179,25 +192,9 @@ function setInpStarttime() {
 function main() {
     addForm.addEventListener("submit", inputTask);
     search.addEventListener("input", Search);
-    actFilter.addEventListener("change", () => {
-        if (actFilter.checked) {
-            filterMode = "active"
-        } else {
-            filterMode = "all"
-        }
-        Search();
-    });
-    completeFilter.addEventListener("change", () => {
-        if (completeFilter.checked) {
-            filterMode = "complete"
-        } else {
-            filterMode = "all"
-        }
-        Search();
-    });
-    priorityFilter.addEventListener("change",()=>{
-        Search();
-    });
+    actFilter.addEventListener("change", Search);
+    completeFilter.addEventListener("change", Search);
+    priorityFilter.addEventListener("change", Search);
     ReadTask();
     Search();
     RenderTaskCount();
