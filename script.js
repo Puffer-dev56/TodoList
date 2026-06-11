@@ -55,7 +55,7 @@ function filterEvent() {
         actFilter.checked = false;
         return taskList.filter(task => task.Status);
     } else if (priorityFilter.checked) {
-        return [...taskList].sort((a, b) => Number(a.Priority) - Number(b.Priority));
+        return [...taskList].sort((a, b) => Number(b.Priority) - Number(a.Priority));
     }
     return taskList;
 }
@@ -158,10 +158,52 @@ function RenderTask(Tasks) {
         btnEdit.classList.add("btn", "btn-outline-secondary", "material-symbols-outlined");
         btnEdit.textContent = "edit";
         btnClose.addEventListener("click", () => { DeleteModal(task); });
+        btnEdit.addEventListener("click", () => { btnEditEvent(task) });
         btnContainer.append(btnEdit, btnClose);
         TasksChecked(taskCard, labDate, labTask, task);
         taskFrame.prepend(taskCard);
     });
+}
+function btnEditEvent(task) {
+    const editModal = new bootstrap.Modal("#editModal");
+    const editForm = document.querySelector("#editForm");
+    const taskFrame = document.querySelector("#inpTaskFrame");
+    editForm.inpCategory.value = task.Name;
+    editForm.prioritySelector.value = task.Priority;
+    editForm.from.value = task.From;
+    editForm.to.value = task.Deadline;
+    editForm.Add.onclick = () => { EditModal(taskFrame) }
+    editForm.onsubmit = (e) => {
+        e.preventDefault();
+        SaveChange(task, editForm)
+        editModal.hide();
+    };
+    editModal.show();
+}
+function EditModal(taskFrame) {
+    const inpCard = document.createElement("div");
+    const body = document.createElement("div");
+    inpCard.classList = "d-flex align-items-center justify-content-between p-0 mb-2 gap-1"
+    body.classList = "input-group";
+
+    const labInp = document.createElement("label");
+    const inpTask = document.createElement("input");
+    labInp.classList = "input-group-text";
+    labInp.textContent = "-"
+    inpTask.classList = "form-control";
+    inpTask.placeholder = "What are you focusing on...";
+    inpTask.id = "subTask";
+    body.append(labInp, inpTask);
+
+    const btnDelete = document.createElement("button");
+    btnDelete.classList = "btn btn-danger material-symbols-outlined"
+    btnDelete.textContent = "delete"
+    btnDelete.onclick = () => { RemoveSubTask(inpCard) }
+    inpCard.append(body, btnDelete);
+    taskFrame.append(inpCard);
+}
+function RemoveSubTask(inpCard) {
+    inpCard.remove();
 }
 function DeleteModal(target) {
     const delModal = new bootstrap.Modal("#delModal");
@@ -173,6 +215,13 @@ function DeleteModal(target) {
     };
     btnCancel.onclick = () => { delModal.hide(); };
     delModal.show();
+}
+function SaveChange(task, editForm) {
+    task.Name = editForm.inpCategory.value;
+    task.Priority = editForm.prioritySelector.value;
+    task.From = editForm.from.value
+    task.Deadline = editForm.to.value
+    Search();
 }
 function RemoveTask(target) {
     taskList = taskList.filter((task) => {
