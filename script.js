@@ -9,6 +9,7 @@ const completeFilter = document.querySelector("#Complete");
 const priorityFilter = document.querySelector("#Priority");
 const inpStarttime = document.querySelector("#from");
 let taskList = [];
+let dragTask;
 function inputTask(event) {
     event.preventDefault();
     let info = String(event.target.inpTask.value).trim();
@@ -124,7 +125,7 @@ function DateText(task) {
 }
 function PriorityText(task) {
     if (task.Priority === "1") {
-        return ["Heigh", "bg-danger"];
+        return ["High", "bg-danger"];
     } else if (task.Priority === "2") {
         return ["Medium", "bg-warning"];
     } else {
@@ -168,6 +169,8 @@ function RenderTask(Tasks) {
     taskFrame.replaceChildren();
     Tasks.forEach((task) => {
         const taskCard = document.createElement("div");
+        taskCard.draggable = true;
+        dragAndDropEvent(taskCard, task);
         taskCard.classList.add("border", "rounded", "d-flex", "flex-column", "mb-3");
 
         const header = document.createElement("div");
@@ -213,6 +216,20 @@ function RenderTask(Tasks) {
         RenderSubTask(task, taskCard, subTaskContainer, labTask);
         TasksChecked(taskCard, labDate, labTask, task);
         taskFrame.prepend(taskCard);
+    });
+}
+function dragAndDropEvent(taskCard, task) {
+    taskCard.addEventListener("dragstart", () => {
+        dragTask = task;
+    });
+    taskCard.addEventListener("dragover", (event) => { event.preventDefault(); });
+    taskCard.addEventListener("drop", () => {
+        let dragIndex = taskList.findIndex(t => t.id === dragTask.id);
+        let dropIndex = taskList.findIndex(t => t.id === task.id);
+        const item = taskList.splice(dragIndex, 1)[0];
+        taskList.splice(dropIndex, 0, item);
+        SaveTask();
+        Search();
     });
 }
 function btnEditEvent(task) {
@@ -328,6 +345,9 @@ function SaveChange(task, editForm, editModal) {
             }
         }
     });
+    if(task.SubTasks.length > 0){
+        task.Status = false;
+    }
     editModal.hide();
     SaveTask();
     RenderTaskCount();
