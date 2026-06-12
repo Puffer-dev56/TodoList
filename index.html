@@ -99,6 +99,57 @@
                 <div class="mx-1 mt-3 mt-sm-4" id="taskFrame">
                     <!-- Output -->
 
+                    
+                    <div class="border rounded d-flex flex-column mb-3">
+                        <div
+                            class="bg-light rounded-top d-flex position-relative align-items-center justify-content-center  border-bottom py-2">
+                            <span class="badge position-absolute start-0 ms-2 bg-info">low</span>
+                            <p class="m-0 ms-4">00/00/00</p>
+                        </div>
+                        <div class="d-flex p-2 justify-content-between align-items-center">
+                            <form class="d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input">
+                                <label class="form-check-label ms-1">test</label>
+                            </form>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-secondary material-symbols-outlined">edit</button>
+                                <button class="btn btn-danger material-symbols-outlined">delete</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded d-flex flex-column mb-3">
+                        <div class="bg-light rounded-top d-flex position-relative align-items-center justify-content-center  border-bottom py-2">
+                            <span class="badge position-absolute start-0 ms-2 bg-info">low</span>
+                            <p class="m-0 ms-4">00/00/00</p>
+                        </div>
+                        <div class="d-flex p-2 justify-content-between align-items-center">
+                            <form class="d-flex justify-content-between align-items-center">
+                                <input type="checkbox" class="form-check-input">
+                                <label class="form-check-label ms-1 fs-4 fw-bold">test</label>
+                            </form>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-secondary material-symbols-outlined">edit</button>
+                                <button class="btn btn-danger material-symbols-outlined">delete</button>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column ms-5 gap-2 mb-4 ps-4">
+                            <form class="d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input">
+                                <label class="form-check-label ms-1">test</label>
+                            </form>
+                            <form class="d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input">
+                                <label class="form-check-label ms-1">test</label>
+                            </form>
+                            <form class="d-flex align-items-center">
+                                <input type="checkbox" class="form-check-input">
+                                <label class="form-check-label ms-1">test</label>
+                            </form>
+                        </div>
+                    </div>
+
+
                 </div>
             </div>
         </div>
@@ -131,7 +182,7 @@
             <form id="editForm" class="modal-content">
                 <div class="modal-header">
                     <h1 class="modal-title fs-5">Edit</h1>
-                    <button class="btn btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="container d-flex flex-column">
@@ -162,12 +213,13 @@
                             <!-- output  -->
                         </div>
                         <div class="row">
-                            <button class="btn btn-outline-primary" type="button" id="Add">Add Task<span>&plus;</span></button>
+                            <button class="btn btn-outline-primary" type="button" id="Add">Add
+                                Task<span>&plus;</span></button>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-success" id="btnSaveEdit">Save</button>
                 </div>
             </form>

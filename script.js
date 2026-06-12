@@ -38,6 +38,7 @@ function inputTask(event) {
             Priority: inpPriority,
             From: inpFrom,
             Deadline: inpDeadline,
+            SubTasks: [],
         });
         event.target.inpTask.value = "";
         event.target.deadline.value = "";
@@ -117,6 +118,24 @@ function TasksChecked(taskCard, labDate, labTask, task) {
         labDate.classList.add("text-secondary");
     }
 }
+function RenderSubTask(task,taskCard,subTaskContainer,labTask) {
+    if (task.SubTasks.length > 0) {
+        taskCard.append(subTaskContainer);
+        task.SubTasks.forEach((subTask)=>{
+            const subClassForm = document.createElement("form");
+            const subTaskCheckbox = document.createElement("input");
+            const labSubTask = document.createElement("label");
+            subClassForm.classList.add("d-flex", "align-items-center");
+            subTaskCheckbox.type = "checkbox"
+            subTaskCheckbox.classList.add("form-check-input");
+            labSubTask.textContent = subTask.Name;
+            labSubTask.classList.add("form-check-label", "ms-1");
+            labTask.classList = "form-check-label ms-1 fs-4 fw-bold";
+            subClassForm.append(subTaskCheckbox,labSubTask);
+            subTaskContainer.append(subClassForm);
+        });
+    }
+}
 function RenderTask(Tasks) {
     taskFrame.replaceChildren();
     Tasks.forEach((task) => {
@@ -125,8 +144,10 @@ function RenderTask(Tasks) {
 
         const header = document.createElement("div");
         const body = document.createElement("div");
+        const subTaskContainer = document.createElement("div");
         body.classList.add("d-flex", "p-2", "justify-content-between", "align-items-center");
         header.classList.add("bg-light", "rounded-top", "d-flex", "position-relative", "align-items-center", "justify-content-center", "border-bottom", "py-2");
+        subTaskContainer.classList.add("d-flex", "flex-column", "ms-5", "gap-2", "mb-4", "ps-4");
         taskCard.append(header, body);
 
         const labDate = document.createElement("p")
@@ -139,13 +160,14 @@ function RenderTask(Tasks) {
 
         const taskForm = document.createElement("form");
         const Checkbox = document.createElement("input");
+        const labTask = document.createElement("label");
+        taskForm.classList.add("d-flex", "align-items-center");
         Checkbox.addEventListener("change", (event) => { CheckboxEvent(event, task) });
         Checkbox.type = "checkbox";
         Checkbox.classList.add("form-check-input");
         Checkbox.checked = task.Status;
-        const labTask = document.createElement("label");
         labTask.textContent = task.Name;
-        labTask.classList.add("form-check-label", "ms-1");
+        labTask.classList = "form-check-label", "ms-1";
         taskForm.append(Checkbox, labTask);
 
         const btnContainer = document.createElement("div");
@@ -160,6 +182,7 @@ function RenderTask(Tasks) {
         btnClose.addEventListener("click", () => { DeleteModal(task); });
         btnEdit.addEventListener("click", () => { btnEditEvent(task) });
         btnContainer.append(btnEdit, btnClose);
+        RenderSubTask(task,taskCard,subTaskContainer,labTask);
         TasksChecked(taskCard, labDate, labTask, task);
         taskFrame.prepend(taskCard);
     });
@@ -168,6 +191,8 @@ function btnEditEvent(task) {
     const editModal = new bootstrap.Modal("#editModal");
     const editForm = document.querySelector("#editForm");
     const taskFrame = document.querySelector("#inpTaskFrame");
+    taskFrame.replaceChildren();
+    inpRenderSubTasks(task, taskFrame);
     editForm.inpCategory.value = task.Name;
     editForm.prioritySelector.value = task.Priority;
     editForm.from.value = task.From;
@@ -179,6 +204,33 @@ function btnEditEvent(task) {
         editModal.hide();
     };
     editModal.show();
+}
+function inpRenderSubTasks(task, taskFrame) {
+    if (task.SubTasks.length > 0) {
+        task.SubTasks.forEach((subTask) => {
+            const inpCard = document.createElement("div");
+            const body = document.createElement("div");
+            inpCard.classList = "d-flex align-items-center justify-content-between p-0 mb-2 gap-1"
+            body.classList = "input-group";
+
+            const labInp = document.createElement("label");
+            const inpTask = document.createElement("input");
+            labInp.classList = "input-group-text";
+            labInp.textContent = "-"
+            inpTask.value = subTask.Name;
+            inpTask.classList = "form-control";
+            inpTask.placeholder = "What are you focusing on...";
+            inpTask.classList.add("subTask");
+            body.append(labInp, inpTask);
+
+            const btnDelete = document.createElement("button");
+            btnDelete.classList = "btn btn-danger material-symbols-outlined"
+            btnDelete.textContent = "delete"
+            btnDelete.onclick = () => { inpCard.remove(); }
+            inpCard.append(body, btnDelete);
+            taskFrame.append(inpCard);
+        });
+    }
 }
 function EditModal(taskFrame) {
     const inpCard = document.createElement("div");
@@ -192,18 +244,15 @@ function EditModal(taskFrame) {
     labInp.textContent = "-"
     inpTask.classList = "form-control";
     inpTask.placeholder = "What are you focusing on...";
-    inpTask.id = "subTask";
+    inpTask.classList.add("subTask");
     body.append(labInp, inpTask);
 
     const btnDelete = document.createElement("button");
     btnDelete.classList = "btn btn-danger material-symbols-outlined"
     btnDelete.textContent = "delete"
-    btnDelete.onclick = () => { RemoveSubTask(inpCard) }
+    btnDelete.onclick = () => { inpCard.remove }
     inpCard.append(body, btnDelete);
     taskFrame.append(inpCard);
-}
-function RemoveSubTask(inpCard) {
-    inpCard.remove();
 }
 function DeleteModal(target) {
     const delModal = new bootstrap.Modal("#delModal");
@@ -217,10 +266,23 @@ function DeleteModal(target) {
     delModal.show();
 }
 function SaveChange(task, editForm) {
+    const inpSubTasks = editForm.querySelectorAll(".subTask");
     task.Name = editForm.inpCategory.value;
     task.Priority = editForm.prioritySelector.value;
     task.From = editForm.from.value
     task.Deadline = editForm.to.value
+    task.SubTasks = [];
+    inpSubTasks.forEach((subTask) => {
+        if (subTask.value.trim() !== "") {
+            task.SubTasks.push({
+                Name: subTask.value.trim(),
+                Status: false,
+            });
+        }
+    });
+    console.log(task.SubTasks);
+    SaveTask();
+    RenderTaskCount();
     Search();
 }
 function RemoveTask(target) {
