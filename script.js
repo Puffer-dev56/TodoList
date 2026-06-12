@@ -28,7 +28,7 @@ function inputTask(event) {
     } else if (checkDate < 0) {
         setInpStarttime();
         event.target.deadline.value = "";
-        event.target.from.focus();
+        event.target.deadline.focus();
         return;
     } else {
         taskList.push({
@@ -84,13 +84,33 @@ function Search() {
         RenderTask(tasks);
     } else {
         let temp = tasks.filter((task) => {
-            return String(task.Name).toLowerCase().includes(searchTarget.toLocaleLowerCase());
+            return String(task.Name).toLowerCase().includes(searchTarget);
         });
         RenderTask(temp);
     }
 }
+function subTaskCheckboxEvent(event, subTask, task) {
+    subTask.Status = event.target.checked;
+    if (!subTask.Status) {
+        task.Status = false;
+    } else if (task.SubTasks.every(check => check.Status)) {
+        task.Status = true;
+    }
+    SaveTask();
+    RenderTaskCount();
+    Search();
+}
 function CheckboxEvent(event, task) {
     task.Status = event.target.checked;
+    if (task.Status) {
+        task.SubTasks.forEach((subTask) => {
+            subTask.Status = true;
+        });
+    } else {
+        task.SubTasks.forEach((subTask) => {
+            subTask.Status = false;
+        });
+    }
     SaveTask();
     RenderTaskCount();
     Search();
@@ -111,6 +131,11 @@ function PriorityText(task) {
         return ["Low", "bg-info"]
     }
 }
+function SubTasksChecked(task, subTask, labSubTask, subTaskCheckbox) {
+    if (subTask.Status) {
+        labSubTask.classList.add("text-decoration-line-through", "text-secondary");
+    }
+}
 function TasksChecked(taskCard, labDate, labTask, task) {
     if (task.Status) {
         taskCard.classList.add("opacity-75");
@@ -118,21 +143,24 @@ function TasksChecked(taskCard, labDate, labTask, task) {
         labDate.classList.add("text-secondary");
     }
 }
-function RenderSubTask(task,taskCard,subTaskContainer,labTask) {
+function RenderSubTask(task, taskCard, subTaskContainer, labTask) {
     if (task.SubTasks.length > 0) {
         taskCard.append(subTaskContainer);
-        task.SubTasks.forEach((subTask)=>{
+        task.SubTasks.forEach((subTask) => {
             const subClassForm = document.createElement("form");
             const subTaskCheckbox = document.createElement("input");
             const labSubTask = document.createElement("label");
             subClassForm.classList.add("d-flex", "align-items-center");
+            subTaskCheckbox.checked = subTask.Status;
             subTaskCheckbox.type = "checkbox"
             subTaskCheckbox.classList.add("form-check-input");
+            subTaskCheckbox.addEventListener("change", (event) => { subTaskCheckboxEvent(event, subTask, task) });
             labSubTask.textContent = subTask.Name;
             labSubTask.classList.add("form-check-label", "ms-1");
             labTask.classList = "form-check-label ms-1 fs-4 fw-bold";
-            subClassForm.append(subTaskCheckbox,labSubTask);
+            subClassForm.append(subTaskCheckbox, labSubTask);
             subTaskContainer.append(subClassForm);
+            SubTasksChecked(task, subTask, labSubTask, subTaskCheckbox);
         });
     }
 }
@@ -167,7 +195,7 @@ function RenderTask(Tasks) {
         Checkbox.classList.add("form-check-input");
         Checkbox.checked = task.Status;
         labTask.textContent = task.Name;
-        labTask.classList = "form-check-label", "ms-1";
+        labTask.classList = "form-check-label ms-1";
         taskForm.append(Checkbox, labTask);
 
         const btnContainer = document.createElement("div");
@@ -182,7 +210,7 @@ function RenderTask(Tasks) {
         btnClose.addEventListener("click", () => { DeleteModal(task); });
         btnEdit.addEventListener("click", () => { btnEditEvent(task) });
         btnContainer.append(btnEdit, btnClose);
-        RenderSubTask(task,taskCard,subTaskContainer,labTask);
+        RenderSubTask(task, taskCard, subTaskContainer, labTask);
         TasksChecked(taskCard, labDate, labTask, task);
         taskFrame.prepend(taskCard);
     });
@@ -200,8 +228,7 @@ function btnEditEvent(task) {
     editForm.Add.onclick = () => { EditModal(taskFrame) }
     editForm.onsubmit = (e) => {
         e.preventDefault();
-        SaveChange(task, editForm)
-        editModal.hide();
+        SaveChange(task, editForm, editModal)
     };
     editModal.show();
 }
@@ -250,7 +277,7 @@ function EditModal(taskFrame) {
     const btnDelete = document.createElement("button");
     btnDelete.classList = "btn btn-danger material-symbols-outlined"
     btnDelete.textContent = "delete"
-    btnDelete.onclick = () => { inpCard.remove }
+    btnDelete.onclick = () => { inpCard.remove(); }
     inpCard.append(body, btnDelete);
     taskFrame.append(inpCard);
 }
@@ -265,22 +292,43 @@ function DeleteModal(target) {
     btnCancel.onclick = () => { delModal.hide(); };
     delModal.show();
 }
-function SaveChange(task, editForm) {
+function SaveChange(task, editForm, editModal) {
     const inpSubTasks = editForm.querySelectorAll(".subTask");
+    const oldtask = [...task.SubTasks];
+    if (editForm.inpCategory.value.trim() === "") {
+        editForm.inpCategory.focus();
+        return;
+    } else if (editForm.from.value.trim() === "") {
+        editForm.from.focus();
+        return;
+    } else if (editForm.to.value.trim() === "") {
+        editForm.to.focus();
+        return;
+    } else if (new Date(editForm.to.value) < new Date(editForm.from.value)) {
+        editForm.to.focus();
+        return;
+    }
     task.Name = editForm.inpCategory.value;
     task.Priority = editForm.prioritySelector.value;
     task.From = editForm.from.value
     task.Deadline = editForm.to.value
     task.SubTasks = [];
-    inpSubTasks.forEach((subTask) => {
+    inpSubTasks.forEach((subTask, index) => {
         if (subTask.value.trim() !== "") {
-            task.SubTasks.push({
-                Name: subTask.value.trim(),
-                Status: false,
-            });
+            if (oldtask[index]) {
+                task.SubTasks.push({
+                    Name: subTask.value.trim(),
+                    Status: oldtask[index].Status,
+                });
+            } else {
+                task.SubTasks.push({
+                    Name: subTask.value.trim(),
+                    Status: false,
+                });
+            }
         }
     });
-    console.log(task.SubTasks);
+    editModal.hide();
     SaveTask();
     RenderTaskCount();
     Search();
