@@ -342,12 +342,10 @@ function SaveChange(task, editForm, editModal) {
                     Name: subTask.value.trim(),
                     Status: false,
                 });
+                task.Status = false;
             }
         }
     });
-    if(task.SubTasks.length > 0){
-        task.Status = false;
-    }
     editModal.hide();
     SaveTask();
     RenderTaskCount();
